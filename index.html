@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>D3 v5 hierarchy partition v4/v5</title>
+</head>
+
+<body>
+  <svg width="700" height="700"></svg>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+  // 1. 描画用のデータ準備
+
+  var data = {
+    "name": "A",
+    "children": [
+      { "name": "B", "value": 27 },
+      {
+        "name": "C",
+        "children": [
+          { "name": "D", "value": 2 },
+          { "name": "E", "value": 16 },
+          { "name": "F", "value": 17 }
+        ]
+      },
+      { "name": "G", "value": 19 },
+      {
+        "name": "H",
+        "children": [
+          { "name": "I", "value": 13 },
+          { "name": "J", "value": 15 }
+        ]
+      },
+      { "name": "K", "value": 9 }
+    ]
+  };
+
+  var width = document.querySelector('svg').clientWidth;
+  var height = document.querySelector('svg').clientWidth;
+
+  var root = d3.hierarchy(data);
+  root
+    .sum(function(d) {return d.value;})
+    .sort(function(a, b) {return b.height - a.height || b.value - a.value;});
+
+  var partition = d3.partition()
+    .size([width, height])
+    .padding(1)
+    .round(true);
+
+  partition(root);
+
+  var g = d3.select('svg')
+    .selectAll('.node')
+    .data(root.descendants())
+    .enter()
+    .append('g')
+    .attr('class', 'node')
+    .attr('transform', function(d) { return 'translate(' + d.y0 + ',' + d.x0 + ')';});
+
+  g.append('rect')
+    .style('width', function(d) {return d.y1 - d.y0;})
+    .style('height', function(d) {return d.x1 - d.x0;})
+    .style('fill', function(d) {
+      while(d.depth > 1) d = d.parent;
+      if (d.depth == 0) return 'blue';
+      return d3.schemeCategory10[parseInt(d.value % 7)];
+    })
+    .style('opacity', '0.6');
+
+  g.append('text')
+    .attr('text-anchor', 'start')
+    .attr('x', 5)
+    .attr('dy', 16)
+    .text(function(d) {return d.data.name + ':' + d.value;});
+
+  </script>
+</body>
+
+</html>
